@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  email        String    @unique
+  name         String
+  password     String
+  location     String?
+  bio          String?
+  website      String?
+  github       String?
+  refreshToken String?
+  photoURL     String?
+  skillsAndLanguages String?
+  learning String?
+  hackingOn    String?
+  role         Role      @default(USER)
+
+  comments     Comment[]
+  likes        Like[]
+  posts        Post[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Post {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  title     String
+  content   String
+  slug      String @unique
+  thumbnailURL String
+  tags      Tag[]
+  authorId  String
+  numberOfViews Int @default(0)
+
+  comments  Comment[]
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  content   String
+  authorId  String
+  postId    String
+  parentId  String?
+
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("Comment_Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("Comment_Replies")
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  likeType  LikeType @default(LIKE) 
+  commentId String
+  userId    String
+
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum LikeType {
+  LIKE
+  DISLIKE
+}
+
+model Tag {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+  color String
+  description String?
+  photoURL String?
+  posts Post[]
+}
+
+model Report {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  option String
+  url String
+  message String?
+}
